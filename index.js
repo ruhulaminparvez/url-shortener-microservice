@@ -33,13 +33,20 @@ app.get('/api/hello', (req, res) => {
 app.post('/api/shorturl', (req, res) => {
   const { url: originalUrl } = req.body;
 
-  // Validate URL using dns.lookup
-  const hostname = url.parse(originalUrl).hostname;
+  // Validate the URL format using a regex for http/https
+  const urlRegex = /^(https?:\/\/)(www\.)?[\w-]+(\.[\w-]+)+.*$/;
+  if (!urlRegex.test(originalUrl)) {
+    return res.json({ error: 'invalid url' });
+  }
+
+  // Extract hostname for DNS lookup
+  const hostname = new URL(originalUrl).hostname;
+
   dns.lookup(hostname, (err) => {
     if (err) {
       return res.json({ error: 'invalid url' });
     }
-    
+
     const shortUrl = shortUrlCounter++;
     urlDatabase[shortUrl] = originalUrl;
 
